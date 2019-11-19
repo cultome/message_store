@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  pg-es:
+    image: postgres:12.0-alpine
+    container_name: pg-message_store
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=aleph
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

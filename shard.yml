@@ -1,0 +1,13 @@
+name: message_store
+version: 0.1.0
+
+authors:
+  - Carlos Soria <csoria@cultome.io>
+
+dependencies:
+  pg:
+    github: will/crystal-pg
+
+crystal: 0.31.1
+
+license: MIT
