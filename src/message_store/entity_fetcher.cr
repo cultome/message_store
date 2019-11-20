@@ -8,12 +8,11 @@ module MessageStore::EntityFetcher
       snapshot_payload = snapshot.fetch(stream)
 
       if snapshot_payload.nil? # not in snapshot
-        mapping = entity_class.projected_events.each_with_object(Hash(String, Event.class).new) { |clazz, acc| acc[clazz.name] = clazz }
-
+        mapping = classname_table entity_class.projected_events
+        query = select_on_stream_query("type, data, metadata", stream)
         events = [] of Event
 
         with_db do |db|
-          query = select_on_stream_query("type, data, metadata", stream)
           rs = query_to_stream(db, query, stream)
 
           rs.each do

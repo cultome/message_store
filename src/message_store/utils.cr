@@ -1,7 +1,9 @@
 module MessageStore::Utils
   def latest_position(db : DB::Database, stream : String)
     query = select_on_stream_query "max(position)", stream
-    query_to_stream(db, query, stream).read(Int64?)
+    rs = query_to_stream(db, query, stream)
+    rs.move_next
+    rs.read(Int64?)
   end
 
   def build_event(event_class : Event.class, data_payload : JSON::Any, metadata_payload : JSON::Any) : Event
@@ -42,13 +44,14 @@ module MessageStore::Utils
     SQL
   end
 
+  def classname_table(classes : Array(Object.class))
+    classes.each_with_object(Hash(String, Event.class).new) { |clazz, acc| acc[clazz.name] = clazz }
+  end
+
   private def query_to_stream(db : DB::Database, query : String, stream : String)
     stream_data = parse_stream stream
 
-    rs = query_to_stream(db, query, stream_data[:name], stream_data[:category], stream_data[:id])
-    rs.move_next
-
-    rs
+    query_to_stream(db, query, stream_data[:name], stream_data[:category], stream_data[:id])
   end
 
   private def query_to_stream(db : DB::Database, query : String, stream_name : String, stream_category : String, stream_id : String)

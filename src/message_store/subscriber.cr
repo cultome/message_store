@@ -4,7 +4,7 @@ module MessageStore::Subscriber
   end
 
   private def create_listener(stream : String, handler : Handler, events : Array(Event.class))
-    mapping = events.each_with_object(Hash(String, Event.class).new) { |clazz, acc| acc[clazz.name] = clazz }
+    mapping = classname_table events
 
     PG.connect_listen(config.db_url, stream) do |update|
       notification = Notification.from_json update.payload
