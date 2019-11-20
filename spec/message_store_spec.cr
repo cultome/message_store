@@ -9,6 +9,20 @@ describe MessageStore do
   end
 
   it "#fetch_entity" do
+    ms = MessageStore::MessageStore.new
+    event = TestEvent.from_json({"name" => "entity"}.to_json)
+
+    ms.write(event, "spec/4")
+
+    entity = ms.fetch_entity("spec/4", TestEntity)
+
+    entity.should_not be_nil
+    if entity
+      entity.name.should_not be_nil
+      if entity.name
+        entity.name.should eq "entity"
+      end
+    end
   end
 
   it "#subscribe" do
