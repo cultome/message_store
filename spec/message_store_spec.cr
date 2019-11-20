@@ -3,7 +3,7 @@ require "./spec_helper"
 describe MessageStore do
   it "#write" do
     ms = MessageStore::MessageStore.new
-    event = TestEvent.new({"name" => "value"}, {"reply_to" => "spec:response"})
+    event = TestEvent.from_json({"name" => "value"}.to_json)
 
     ms.write(event, "spec/1")
   end
@@ -14,7 +14,7 @@ describe MessageStore do
   it "#subscribe" do
     ms = MessageStore::MessageStore.new
     handler = TestHandler.new
-    event = TestEvent.new({"name" => "value"}, {"reply_to" => "spec:response"})
+    event = TestEvent.from_json({"name" => "value"}.to_json)
 
     ms.subscribe "spec:subscribe/1", handler, [TestEvent]
     ms.write(event, "spec:subscribe/1")

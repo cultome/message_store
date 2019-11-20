@@ -2,9 +2,9 @@ require "spec"
 require "../src/message_store"
 
 class TestEvent < MessageStore::Event
-  def to_json
-    @payload.to_json
-  end
+  JSON.mapping(
+    name: String
+  )
 end
 
 class TestHandler < MessageStore::Handler
@@ -14,6 +14,6 @@ class TestHandler < MessageStore::Handler
   end
 
   def handle(event : TestEvent)
-    @response = event.payload["name"]
+    @response = event.name
   end
 end

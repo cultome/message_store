@@ -41,9 +41,9 @@ module MessageStore
         notification = Notification.from_json update.payload
 
         if mapping.has_key? notification.event_name
-          event_instance = mapping[notification.event_name].new(
-            Hash(String, String).from_json(notification.payload), Hash(String, String).from_json(notification.metadata)
-          )
+          event_instance = mapping[notification.event_name].from_json notification.payload
+          event_instance.metadata = Hash(String, String).from_json(notification.metadata)
+
           handler.handle event_instance
         end
       end

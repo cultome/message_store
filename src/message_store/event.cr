@@ -1,9 +1,7 @@
 abstract class MessageStore::Event
-  property payload
   property metadata
 
-  def initialize(@payload : Hash(String, String), @metadata : Hash(String, String))
-  end
+  @metadata : Hash(String, String)? = {} of String => String
 
   abstract def to_json
 end
