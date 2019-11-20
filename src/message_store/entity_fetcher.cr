@@ -8,20 +8,24 @@ module MessageStore::EntityFetcher
       snapshot_payload = snapshot.fetch(stream)
 
       if snapshot_payload.nil? # not in snapshot
-        mapping = classname_table entity_class.projected_events
-        query = select_on_stream_query("type, data, metadata", stream)
-        events = [] of Event
-
-        with_db do |db|
-          query_to_stream(db, query, stream) do |rs|
-            type, data, metadata = rs.read(String, JSON::Any, JSON::Any)
-
-            events.push build_event(mapping[type], data, metadata)
-          end
-        end # with_db
-
-        entity_class.project events
+        entity = project_from 0, stream, entity_class
       end
     end
+  end
+
+  private def project_from(position : Int64, stream : String, entity_class : Entity.class)
+    mapping = classname_table entity_class.projected_events
+    query = select_on_stream_query("type, data, metadata", stream)
+    events = [] of Event
+
+    with_db do |db|
+      query_to_stream(db, query, stream) do |rs|
+        type, data, metadata = rs.read(String, JSON::Any, JSON::Any)
+
+        events.push build_event(mapping[type], data, metadata)
+      end
+    end # with_db
+
+    entity_class.project events
   end
 end
