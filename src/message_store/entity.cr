@@ -1,6 +1,18 @@
 abstract class MessageStore::Entity
+  property version
+
+  @version : Int64 = 0
+
   def apply(event : Event)
     #noop
+  end
+
+  def update(events : Array(Event))
+    events.each do |event|
+      apply event
+    end
+
+    self
   end
 
   def self.projected_events : Array(Event)
@@ -8,10 +20,6 @@ abstract class MessageStore::Entity
   end
 
   def self.project(events : Array(Event))
-    instance = self.new
-
-    events.each_with_object(instance) do |event, entity|
-      entity.apply event
-    end
+    self.new.update events
   end
 end

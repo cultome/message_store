@@ -21,6 +21,7 @@ describe MessageStore do
       entity.name.should_not be_nil
       if entity.name
         entity.name.should eq "entity"
+        entity.version.should eq 6
       end
     end
   end

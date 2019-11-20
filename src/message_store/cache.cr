@@ -1,4 +1,7 @@
 class MessageStore::RedisCache
+  def update(stream : String, entity : Entity)
+  end
+
   def fetch(stream : String) : String?
   end
 end

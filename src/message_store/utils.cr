@@ -1,7 +1,14 @@
 module MessageStore::Utils
-  def latest_position(db : DB::Database, stream : String)
-    query = select_on_stream_query "max(position)", stream
-    rs = query_to_stream(db, query, stream) { |rs| rs.read(Int64?) }
+  def latest_position(db : DB::Database, stream : String) : Int64
+    query = select_on_stream_query "max(position)", stream, ordered: false
+
+    position = 0
+    query_to_stream(db, query, stream) do |rs|
+      val = rs.read(Int64?)
+      position = val unless val.nil?
+    end
+
+    position.to_i64
   end
 
   def build_event(event_class : Event.class, data_payload : JSON::Any, metadata_payload : JSON::Any) : Event
@@ -24,7 +31,7 @@ module MessageStore::Utils
     event_instance
   end
 
-  def select_on_stream_query(select_clause : String, stream : String)
+  def select_on_stream_query(select_clause : String, stream : String, where_clause : String? = nil, ordered : Bool = true)
     pidx = 1
     stream_data = parse_stream stream
     stream_category_criteria = stream_data[:category].nil? ? "IS NULL" : "= $#{pidx += 1}"
@@ -39,6 +46,9 @@ module MessageStore::Utils
         stream_name = $1
         AND stream_category #{stream_category_criteria}
         AND stream_id  #{stream_id_criteria}
+        #{ where_clause.nil? ?  "" : "AND #{where_clause}" }
+      #{ ordered ? "ORDER BY position asc" : "" }
+
     SQL
   end
 
