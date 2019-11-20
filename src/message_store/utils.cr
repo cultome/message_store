@@ -1,9 +1,7 @@
 module MessageStore::Utils
   def latest_position(db : DB::Database, stream : String)
     query = select_on_stream_query "max(position)", stream
-    rs = query_to_stream(db, query, stream)
-    rs.move_next
-    rs.read(Int64?)
+    rs = query_to_stream(db, query, stream) { |rs| rs.read(Int64?) }
   end
 
   def build_event(event_class : Event.class, data_payload : JSON::Any, metadata_payload : JSON::Any) : Event
@@ -48,26 +46,30 @@ module MessageStore::Utils
     classes.each_with_object(Hash(String, Event.class).new) { |clazz, acc| acc[clazz.name] = clazz }
   end
 
-  private def query_to_stream(db : DB::Database, query : String, stream : String)
+  def query_to_stream(db : DB::Database, query : String, stream : String, &block : DB::ResultSet ->)
     stream_data = parse_stream stream
 
-    query_to_stream(db, query, stream_data[:name], stream_data[:category], stream_data[:id])
+    execute_query_on_stream(db, query, stream_data[:name], stream_data[:category], stream_data[:id]) do |rs|
+      rs.each do
+        block.call rs
+      end
+    end
   end
 
-  private def query_to_stream(db : DB::Database, query : String, stream_name : String, stream_category : String, stream_id : String)
-    db.query(query, stream_name, stream_category, stream_id)
+  private def execute_query_on_stream(db : DB::Database, query : String, stream_name : String, stream_category : String, stream_id : String, &block : DB::ResultSet ->)
+    db.query(query, stream_name, stream_category, stream_id, &block)
   end
 
-  private def query_to_stream(db : DB::Database, query : String, stream_name : String, stream_category : Nil, stream_id : Nil)
-    db.query(query, stream_name)
+  private def execute_query_on_stream(db : DB::Database, query : String, stream_name : String, stream_category : Nil, stream_id : Nil, &block : DB::ResultSet ->)
+    db.query(query, stream_name, &block)
   end
 
-  private def query_to_stream(db : DB::Database, query : String, stream_name : String, stream_category : Nil, stream_id : String)
-    db.query(query, stream_name, stream_id)
+  private def execute_query_on_stream(db : DB::Database, query : String, stream_name : String, stream_category : Nil, stream_id : String, &block : DB::ResultSet ->)
+    db.query(query, stream_name, stream_id, &block)
   end
 
-  private def query_to_stream(db : DB::Database, query : String, stream_name : String, stream_category : String, stream_id : Nil)
-    db.query(query, stream_name, stream_category)
+  private def execute_query_on_stream(db : DB::Database, query : String, stream_name : String, stream_category : String, stream_id : Nil, &block : DB::ResultSet ->)
+    db.query(query, stream_name, stream_category, &block)
   end
 
   private def parse_stream(stream : String)

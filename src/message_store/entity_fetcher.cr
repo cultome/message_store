@@ -13,9 +13,7 @@ module MessageStore::EntityFetcher
         events = [] of Event
 
         with_db do |db|
-          rs = query_to_stream(db, query, stream)
-
-          rs.each do
+          query_to_stream(db, query, stream) do |rs|
             type, data, metadata = rs.read(String, JSON::Any, JSON::Any)
 
             events.push build_event(mapping[type], data, metadata)
