@@ -1,3 +1,5 @@
 abstract class MessageStore::Handler
-  abstract def handle(event : Event)
+  def handle(event : Event)
+    # noop
+  end
 end

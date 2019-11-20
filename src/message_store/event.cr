@@ -1,6 +1,6 @@
 abstract class MessageStore::Event
-  property metadata
   property payload
+  property metadata
 
   def initialize(@payload : Hash(String, String), @metadata : Hash(String, String))
   end

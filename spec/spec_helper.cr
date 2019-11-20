@@ -6,3 +6,14 @@ class TestEvent < MessageStore::Event
     @payload.to_json
   end
 end
+
+class TestHandler < MessageStore::Handler
+  property response
+
+  def initialize(@response : String? = nil)
+  end
+
+  def handle(event : TestEvent)
+    @response = event.payload["name"]
+  end
+end

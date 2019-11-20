@@ -1,4 +1,5 @@
 require "db"
+require "json"
 require "pg"
 require "uuid"
 require "./message_store/*"
@@ -17,23 +18,35 @@ module MessageStore
       event_name = event.class.name
 
       write_message event_name, payload, metadata, stream_data[:name], stream_data[:category], stream_data[:id]
-      notification = {
-        event_name: event_name,
-        payload: payload,
-        metadata: metadata
-      }
-      notify(stream, notification.to_json)
+
+      notification = Notification.new(event_name, payload, metadata)
+      notify(stream, notification)
     end
 
     def fetch_entity(stream : String)
     end
 
-    def subscribe(stream : String, handler : Handler)
-      spawn
+    def subscribe(stream : String, handler : Handler, events : Array(Event.class))
+      spawn create_listener(stream, handler, events)
     end
 
-    def notify(stream : String, payload : String)
-      with_db { |db| db.exec("SELECT pg_notify($1, $2)", stream, payload) }
+    def notify(stream : String, notification : Notification)
+      with_db { |db| db.exec("SELECT pg_notify($1, $2)", stream, notification.to_json) }
+    end
+
+    private def create_listener(stream : String, handler : Handler, events : Array(Event.class))
+      mapping = events.each_with_object(Hash(String, Event.class).new) { |clazz, acc| acc[clazz.name] = clazz }
+
+      PG.connect_listen(config.db_url, stream) do |update|
+        notification = Notification.from_json update.payload
+
+        if mapping.has_key? notification.event_name
+          event_instance = mapping[notification.event_name].new(
+            Hash(String, String).from_json(notification.payload), Hash(String, String).from_json(notification.metadata)
+          )
+          handler.handle event_instance
+        end
+      end
     end
 
     private def write_message(
