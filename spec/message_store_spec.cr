@@ -1,27 +1,38 @@
 require "./spec_helper"
 
 describe MessageStore do
-  it "#write" do
-    ms = MessageStore::MessageStore.new
-    event = TestEvent.from_json({"name" => "value"}.to_json)
+  context "#write" do
+    it "simple write" do
+      ms = MessageStore::MessageStore.new
+      event = TestEvent.from_json({"name" => "value"}.to_json)
 
-    ms.write(event, "spec/1")
+      ms.write(event, "spec/1")
+    end
+
+    it "with expected version" do
+      ms = MessageStore::MessageStore.new
+      event = TestEvent.from_json({"name" => "value"}.to_json)
+
+      expect_raises(Exception) { ms.write(event, "spec/1", -1) }
+    end
   end
 
   it "#fetch_entity" do
     ms = MessageStore::MessageStore.new
     event = TestEvent.from_json({"name" => "entity"}.to_json)
 
-    ms.write(event, "spec/4")
+    old_version = ms.stream_version "spec/4"
+    ms.write event, "spec/4"
 
     entity = ms.fetch_entity("spec/4", TestEntity)
 
     entity.should_not be_nil
     if entity
       entity.name.should_not be_nil
+
       if entity.name
         entity.name.should eq "entity"
-        entity.version.should eq 6
+        entity.version.should eq (old_version + 1)
       end
     end
   end

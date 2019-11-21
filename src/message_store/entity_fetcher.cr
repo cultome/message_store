@@ -1,6 +1,6 @@
 module MessageStore::EntityFetcher
   def fetch_entity(stream : String, entity_class : Entity.class)
-    latest_version = with_db { |db| latest_position db, stream }
+    latest_version = stream_version stream
     cache_payload = cache.fetch(stream)
 
     entity = if cache_payload.nil? # not in cache
@@ -15,7 +15,6 @@ module MessageStore::EntityFetcher
       latest_events, last_version = events_from_position(entity.version, stream, entity_class)
       # TODO extract this idiom
       entity.update latest_events
-
       entity.version = last_version
 
       cache.update stream, entity

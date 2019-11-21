@@ -32,10 +32,11 @@ module MessageStore::Utils
   end
 
   def select_on_stream_query(select_clause : String, stream : String, where_clause : String? = nil, ordered : Bool = true)
+    name, category, id = parse_stream stream
+
     pidx = 1
-    stream_data = parse_stream stream
-    stream_category_criteria = stream_data[:category].nil? ? "IS NULL" : "= $#{pidx += 1}"
-    stream_id_criteria = stream_data[:id].nil? ? "IS NULL" : "= $#{pidx += 1}"
+    stream_category_criteria = category.nil? ? "IS NULL" : "= $#{pidx += 1}"
+    stream_id_criteria = id.nil? ? "IS NULL" : "= $#{pidx += 1}"
 
     query = <<-SQL
       SELECT
@@ -46,9 +47,8 @@ module MessageStore::Utils
         stream_name = $1
         AND stream_category #{stream_category_criteria}
         AND stream_id  #{stream_id_criteria}
-        #{ where_clause.nil? ?  "" : "AND #{where_clause}" }
-      #{ ordered ? "ORDER BY position asc" : "" }
-
+        #{where_clause.nil? ? "" : "AND #{where_clause}"}
+      #{ordered ? "ORDER BY position asc" : ""}
     SQL
   end
 
@@ -57,12 +57,10 @@ module MessageStore::Utils
   end
 
   def query_to_stream(db : DB::Database, query : String, stream : String, &block : DB::ResultSet ->)
-    stream_data = parse_stream stream
+    name, category, id = parse_stream stream
 
-    execute_query_on_stream(db, query, stream_data[:name], stream_data[:category], stream_data[:id]) do |rs|
-      rs.each do
-        block.call rs
-      end
+    execute_query_on_stream(db, query, name, category, id) do |rs|
+      rs.each { block.call rs }
     end
   end
 
@@ -82,15 +80,12 @@ module MessageStore::Utils
     db.query(query, stream_name, stream_category, &block)
   end
 
-  private def parse_stream(stream : String)
+  private def parse_stream(stream : String) : Tuple(String, String?, String?)
     match = stream.match /^(.+?)(\:(.+?))?(\/(.+?))?$/
 
     raise "Invalid stream name [#{stream}]" if match.nil?
 
-    name = match[1]
-    category = match[3]?
-    id = match[5]?
-
-    {name: name, category: category, id: id}
+    # name, category, id
+    {match[1], match[3]?, match[5]?}
   end
 end

@@ -1,10 +1,10 @@
 module MessageStore::Writer
-  def write(event : Event, stream : String)
+  def write(event : Event, stream : String, expected_version : Int64? = nil)
     payload = event.to_json
     metadata = event.metadata.to_json
     event_name = event.class.name
 
-    write_message event_name, payload, metadata, stream
+    write_message event_name, payload, metadata, stream, expected_version
 
     if responds_to? :notify
       notification = Notification.new(event_name, payload, metadata)
@@ -12,23 +12,27 @@ module MessageStore::Writer
     end
   end
 
-  private def write_message(event_type : String, payload : String, metadata : String, stream : String) : String
-    with_db do |db|
-      stream_data = parse_stream stream
-      latest_id = latest_position db, stream
+  private def write_message(event_type : String, payload : String, metadata : String, stream : String, expected_version : Int64?) : String
+    latest_version = stream_version stream
+    unless expected_version.nil?
+      raise "Invalid expected version! expected: #{expected_version}, actual: #{latest_version}" if expected_version != latest_version
+    end
 
-      id = UUID.random.to_s
+    name, category, stream_id = parse_stream stream
+    id = UUID.random.to_s
+
+    with_db do |db|
       db.exec(
         insert_message_stmt,
         id,
-        stream_data[:name], stream_data[:category], stream_data[:id],
+        name, category, stream_id,
         event_type,
-        latest_id.nil? ? 1 : latest_id + 1,
+        latest_version.nil? ? 1 : latest_version + 1,
         payload, metadata,
       )
-
-      id
     end
+
+    id
   end
 
   private def insert_message_stmt

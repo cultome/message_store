@@ -4,7 +4,7 @@ abstract class MessageStore::Entity
   @version : Int64 = 0
 
   def apply(event : Event)
-    #noop
+    # noop
   end
 
   def update(events : Array(Event))

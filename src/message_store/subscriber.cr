@@ -16,5 +16,4 @@ module MessageStore::Subscriber
       end
     end
   end
-
 end
