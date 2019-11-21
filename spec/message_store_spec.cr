@@ -33,7 +33,7 @@ describe MessageStore do
       old_version = ms.stream_version "spec/4"
       ms.write event, "spec/4"
 
-      entity = ms.fetch_entity("spec/4", TestEntity)
+      entity = ms.fetch_entity "spec/4", TestEntity
 
       entity.should_not be_nil
       if entity
@@ -44,6 +44,23 @@ describe MessageStore do
           entity.version.should eq (old_version + 1)
         end
       end
+    end
+
+    it "create a snapshot" do
+      ms = MessageStore::MessageStore.new
+      event = TestEvent.from_json({"name" => "entity"}.to_json)
+
+      before_snapshot = ms.snapshot.fetch "spec/8"
+
+      ms.config.snapshot_threshold.times.each { ms.write event, "spec/8" }
+      ms.fetch_entity "spec/8", TestEntity
+
+      after_snapshot = ms.snapshot.fetch "spec/8"
+      after_snapshot.should_not eq before_snapshot
+    end
+
+    it "restore from snapshot" do
+      ms = MessageStore::MessageStore.new
     end
   end
 

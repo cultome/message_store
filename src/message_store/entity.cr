@@ -3,6 +3,8 @@ abstract class MessageStore::Entity
 
   @metadata = {} of String => String
 
+  abstract def to_json
+
   def apply(event : Event)
     # noop
   end
