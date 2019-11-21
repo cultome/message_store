@@ -15,6 +15,7 @@ module MessageStore
     include Notifier
     include Cacheable
     include Snapshoter
+    include EventFetcher
     include EntityFetcher
     include Utils
     include PostgresStore

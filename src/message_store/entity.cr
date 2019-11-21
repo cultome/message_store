@@ -1,15 +1,20 @@
 abstract class MessageStore::Entity
-  property version
+  property metadata
 
-  @version : Int64 = 0
+  @metadata = {} of String => String
 
   def apply(event : Event)
     # noop
   end
 
+  def version
+    metadata.fetch("position", "0").to_i64
+  end
+
   def update(events : Array(Event))
     events.each do |event|
       apply event
+      @metadata = event.metadata
     end
 
     self
@@ -17,9 +22,5 @@ abstract class MessageStore::Entity
 
   def self.projected_events : Array(Event)
     raise "Must implement #{self.name}.projected_events!"
-  end
-
-  def self.project(events : Array(Event))
-    self.new.update events
   end
 end

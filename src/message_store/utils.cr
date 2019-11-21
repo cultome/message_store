@@ -11,20 +11,42 @@ module MessageStore::Utils
     position.to_i64
   end
 
-  def build_event(event_class : Event.class, data_payload : JSON::Any, metadata_payload : JSON::Any) : Event
-    event_instance = event_class.from_json data_payload.to_json
+  def build_event(
+    event_class : Event.class,
+    id : String,
+    stream_name : String,
+    stream_category : String?,
+    stream_id : String?,
+    type : String,
+    position : Int64,
+    global_position : Int64,
+    data_payload : JSON::Any,
+    metadata_payload : JSON::Any,
+    time : Time
+  ) : Event
+    instance = event_class.from_json data_payload.to_json
 
-    unless metadata_payload.nil?
-      event_instance.metadata = Hash(String, String).from_json metadata_payload.to_json
-    end
+    instance.metadata = Hash(String, String).from_json(metadata_payload.to_json) unless metadata_payload.nil?
 
-    event_instance
+    instance.metadata = {
+      "type" => event_class.name,
+      "id" => id,
+      "stream_name" => stream_name,
+      "type" => type,
+      "position" => position.to_s,
+      "global_position" => global_position.to_s,
+      "time" => time.to_s
+    }
+    instance.metadata["stream_category"] = stream_category unless stream_category.nil?
+    instance.metadata["stream_id"] = stream_id unless stream_id.nil?
+
+    instance
   end
 
   def build_event(event_class : Event.class, data_payload : String, metadata_payload : String) : Event
     event_instance = event_class.from_json data_payload
 
-    unless metadata_payload.empty?
+    unless metadata_payload.nil?
       event_instance.metadata = Hash(String, String).from_json(metadata_payload)
     end
 

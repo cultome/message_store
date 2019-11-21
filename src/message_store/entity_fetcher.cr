@@ -13,9 +13,7 @@ module MessageStore::EntityFetcher
       old_entity_version = entity.version
 
       latest_events, last_version = events_from_position(entity.version, stream, entity_class)
-      # TODO extract this idiom
       entity.update latest_events
-      entity.version = last_version
 
       cache.update stream, entity
 
@@ -44,28 +42,6 @@ module MessageStore::EntityFetcher
   private def project_from(position : Int64, stream : String, entity_class : Entity.class)
     events, latest_position = events_from_position position, stream, entity_class
 
-    entity = entity_class.project events
-    entity.version = latest_position
-
-    entity
-  end
-
-  private def events_from_position(position : Int64, stream : String, entity_class : Entity.class)
-    mapping = classname_table entity_class.projected_events
-    query = select_on_stream_query("position, type, data, metadata", stream, "position > #{position}")
-
-    events = [] of Event
-    latest_position : Int64 = 0
-
-    with_db do |db|
-      query_to_stream(db, query, stream) do |rs|
-        position, type, data, metadata = rs.read(Int64, String, JSON::Any, JSON::Any)
-
-        events.push build_event(mapping[type], data, metadata)
-        latest_position = position
-      end
-    end
-
-    {events, latest_position}
+    entity_class.new.update events
   end
 end
