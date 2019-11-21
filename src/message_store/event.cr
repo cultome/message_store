@@ -1,3 +1,4 @@
+# TODO implement metadata for tracking and relation
 abstract class MessageStore::Event
   property metadata
 

@@ -5,7 +5,11 @@ module MessageStore
     end
 
     def messages_table
-      ENV.fetch("MESSAGES_TABLE")
+      ENV.fetch("MESSAGES_TABLE", "messages")
+    end
+
+    def entity_snapshots_table
+      ENV.fetch("ENTITY_SNAPSHOTS_TABLE", "entity_snapshots")
     end
 
     def snapshot_threshold

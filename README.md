@@ -9,7 +9,7 @@ TODO: Write a description here
    ```yaml
    dependencies:
      message_store:
-       github: your-github-user/message_store
+       github: cultome/message_store
    ```
 
 2. Run `shards install`
@@ -18,6 +18,17 @@ TODO: Write a description here
 
 ```crystal
 require "message_store"
+```
+
+```sql
+CREATE TABLE IF NOT EXISTS "entity_snapshots" (
+  "stream" text NOT NULL,
+  "position" bigint NOT NULL,
+  "type" text NOT NULL,
+  "data" jsonb,
+  "metadata" jsonb,
+  "time" TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() AT TIME ZONE 'utc') NOT NULL
+)
 ```
 
 ```sql

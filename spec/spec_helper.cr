@@ -19,6 +19,10 @@ class TestHandler < MessageStore::Handler
 end
 
 class TestEntity < MessageStore::Entity
+  JSON.mapping(
+    name: String?
+  )
+
   property name
 
   def initialize(@name : String? = nil)

@@ -12,9 +12,7 @@ module MessageStore::EntityFetcher
     if entity.version < latest_version
       old_entity_version = entity.version
 
-      latest_events, last_version = events_from_position(entity.version, stream, entity_class)
-      entity.update latest_events
-
+      entity = calculate_projection(0, stream, entity_class)
       cache.update stream, entity
 
       if latest_version - old_entity_version >= config.snapshot_threshold
@@ -26,12 +24,19 @@ module MessageStore::EntityFetcher
   end
 
   private def fetch_from_snapshot(stream : String, entity_class : Entity.class)
-    snapshot_payload = snapshot.fetch(stream)
+    data, meta = snapshot.fetch(stream)
 
-    if snapshot_payload.nil? # not in snapshot
-      calculate_projection(0, stream, entity_class)
+    if data.nil? # not in snapshot
+      snapshot.init(stream, entity_class)
+
+      entity_class.new
     else
-      entity_class.from_json snapshot_payload
+      entity = entity_class.from_json data
+      unless meta.nil?
+        entity.metadata = Hash(String, String).from_json meta
+      end
+
+      entity
     end
   end
 

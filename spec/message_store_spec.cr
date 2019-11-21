@@ -46,7 +46,7 @@ describe MessageStore do
       end
     end
 
-    it "create a snapshot" do
+    it "create a snapshot after threshold writes" do
       ms = MessageStore::MessageStore.new
       event = TestEvent.from_json({"name" => "entity"}.to_json)
 
@@ -57,6 +57,19 @@ describe MessageStore do
 
       after_snapshot = ms.snapshot.fetch "spec/8"
       after_snapshot.should_not eq before_snapshot
+    end
+
+    it "does not create a snapshot below threshold" do
+      ms = MessageStore::MessageStore.new
+      event = TestEvent.from_json({"name" => "entity"}.to_json)
+
+      before_snapshot = ms.snapshot.fetch "spec/8"
+
+      (ms.config.snapshot_threshold - 1).times.each { ms.write event, "spec/8" }
+      ms.fetch_entity "spec/8", TestEntity
+
+      after_snapshot = ms.snapshot.fetch "spec/8"
+      after_snapshot.should eq before_snapshot
     end
 
     it "restore from snapshot" do
