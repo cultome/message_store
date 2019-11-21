@@ -65,7 +65,7 @@ describe MessageStore do
 
       before_snapshot = ms.snapshot.fetch "spec/8"
 
-      (ms.config.snapshot_threshold - 1).times.each { ms.write event, "spec/8" }
+      (ms.config.snapshot_threshold - 2).times.each { ms.write event, "spec/8" }
       ms.fetch_entity "spec/8", TestEntity
 
       after_snapshot = ms.snapshot.fetch "spec/8"

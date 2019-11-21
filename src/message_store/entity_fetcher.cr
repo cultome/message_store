@@ -1,13 +1,7 @@
 module MessageStore::EntityFetcher
   def fetch_entity(stream : String, entity_class : Entity.class)
     latest_version = stream_version stream
-    cache_payload = cache.fetch(stream)
-
-    entity = if cache_payload.nil? # not in cache
-               fetch_from_snapshot(stream, entity_class)
-             else
-               entity_class.from_json cache_payload
-             end
+    entity = fetch_from_cache stream, entity_class
 
     if entity.version < latest_version
       old_entity_version = entity.version
@@ -21,6 +15,21 @@ module MessageStore::EntityFetcher
     end
 
     entity
+  end
+
+  private def fetch_from_cache(stream : String, entity_class : Entity.class)
+    data, meta = cache.fetch(stream)
+
+    if data.nil? # not in cache
+      fetch_from_snapshot(stream, entity_class)
+    else
+      entity = entity_class.from_json data
+      unless meta.nil?
+        entity.metadata = Hash(String, String).from_json meta
+      end
+
+      entity
+    end
   end
 
   private def fetch_from_snapshot(stream : String, entity_class : Entity.class)

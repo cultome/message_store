@@ -1,7 +1,10 @@
 require "db"
 require "json"
 require "pg"
+require "redis"
 require "uuid"
+require "./message_store/redis_store"
+require "./message_store/config"
 require "./message_store/*"
 
 module MessageStore
@@ -18,6 +21,7 @@ module MessageStore
     include EventFetcher
     include EntityFetcher
     include Utils
+    include RedisStore
     include PostgresStore
   end
 end
