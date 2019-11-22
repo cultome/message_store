@@ -9,7 +9,7 @@ module MessageStore::EventFetcher
       query_to_stream(db, query, stream) do |rs|
         id, stream_name, stream_category, stream_id, type, position, global_position, data, metadata, time = rs.read(String, String, String?, String?, String, Int64, Int64, JSON::Any, JSON::Any, Time)
 
-        events.push mapping[type].build_event(
+        events.push mapping[type].build(
           id,
           stream_name,
           stream_category,

@@ -41,7 +41,7 @@ abstract class MessageStore::Event
     new_instance
   end
 
-  def self.build_event(
+  def self.build(
     id : String,
     stream_name : String,
     stream_category : String?,
@@ -72,7 +72,7 @@ abstract class MessageStore::Event
     instance
   end
 
-  def self.build_event(data_payload : String, metadata_payload : String) : Event
+  def self.build(data_payload : String, metadata_payload : String) : Event
     event_instance = self.from_json data_payload
 
     unless metadata_payload.nil?
