@@ -32,7 +32,7 @@ class TestEntity < MessageStore::Entity
     @name = event.name
   end
 
-  def self.projected_events
+  def projected_events
     [TestEvent]
   end
 end

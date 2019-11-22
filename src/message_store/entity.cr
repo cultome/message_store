@@ -1,16 +1,8 @@
-abstract class MessageStore::Entity
-  property metadata
-
-  @metadata = {} of String => String
-
-  abstract def to_json
+abstract class MessageStore::Entity < MessageStore::Event
+  abstract def projected_events
 
   def apply(event : Event)
     # noop
-  end
-
-  def version
-    metadata.fetch("position", "0").to_i64
   end
 
   def update(events : Array(Event))
@@ -20,9 +12,5 @@ abstract class MessageStore::Entity
     end
 
     self
-  end
-
-  def self.projected_events : Array(Event)
-    raise "Must implement #{self.name}.projected_events!"
   end
 end

@@ -1,4 +1,3 @@
-# TODO implement metadata for tracking and relation
 abstract class MessageStore::Event
   property metadata
 
@@ -8,6 +7,14 @@ abstract class MessageStore::Event
 
   def id
     @metadata["id"]
+  end
+
+  def version
+    position
+  end
+
+  def position
+    metadata.fetch("position", "0").to_i64
   end
 
   def follow=(event : Event)

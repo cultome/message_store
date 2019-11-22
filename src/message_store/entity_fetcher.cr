@@ -49,13 +49,11 @@ module MessageStore::EntityFetcher
     end
   end
 
-  private def calculate_projection(from_position : Int64, stream : String, entity_class : Entity.class)
-    project_from from_position, stream, entity_class
-  end
+  private def calculate_projection(from_position : Int64, stream : String, entity_class : Event.class)
+    instance = entity_class.new
 
-  private def project_from(position : Int64, stream : String, entity_class : Entity.class)
-    events, latest_position = events_from_position position, stream, entity_class
+    events = events_from_position from_position, stream, instance.projected_events
 
-    entity_class.new.update events
+    instance.update events
   end
 end
