@@ -40,4 +40,45 @@ abstract class MessageStore::Event
 
     new_instance
   end
+
+  def self.build_event(
+    id : String,
+    stream_name : String,
+    stream_category : String?,
+    stream_id : String?,
+    type : String,
+    position : Int64,
+    global_position : Int64,
+    data_payload : JSON::Any,
+    metadata_payload : JSON::Any,
+    time : Time
+  ) : Event
+    instance = self.from_json data_payload.to_json
+
+    instance.metadata = Hash(String, String).from_json(metadata_payload.to_json) unless metadata_payload.nil?
+
+    instance.metadata = {
+      "type"            => self.name,
+      "id"              => id,
+      "stream_name"     => stream_name,
+      "type"            => type,
+      "position"        => position.to_s,
+      "global_position" => global_position.to_s,
+      "time"            => time.to_s,
+    }
+    instance.metadata["stream_category"] = stream_category unless stream_category.nil?
+    instance.metadata["stream_id"] = stream_id unless stream_id.nil?
+
+    instance
+  end
+
+  def self.build_event(data_payload : String, metadata_payload : String) : Event
+    event_instance = self.from_json data_payload
+
+    unless metadata_payload.nil?
+      event_instance.metadata = Hash(String, String).from_json(metadata_payload)
+    end
+
+    event_instance
+  end
 end

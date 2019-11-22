@@ -10,7 +10,7 @@ module MessageStore::Subscriber
       notification = Notification.from_json update.payload
 
       if mapping.has_key? notification.event_name
-        event_instance = build_event(mapping[notification.event_name], notification.payload, notification.metadata)
+        event_instance = mapping[notification.event_name].build_event(notification.payload, notification.metadata)
 
         handler.handle event_instance
       end

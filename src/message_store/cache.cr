@@ -5,7 +5,7 @@ class MessageStore::RedisCache
   def update(stream : String, entity : Entity)
     with_cache do |cache|
       cache.set(stream, {
-        "data" => entity,
+        "data"     => entity,
         "metadata" => entity.metadata,
       }.to_json)
     end

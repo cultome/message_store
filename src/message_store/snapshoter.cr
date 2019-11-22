@@ -26,7 +26,7 @@ class MessageStore::PostgresSnapshot
         ($1, $2, $3, $4, $5)
     SQL
 
-    with_db { |db| db.exec query, stream, 0, entity_class.name , nil, nil}
+    with_db { |db| db.exec query, stream, 0, entity_class.name, nil, nil }
   end
 
   def fetch(stream : String) : Tuple(String?, String?)
