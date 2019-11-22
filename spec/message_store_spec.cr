@@ -88,4 +88,33 @@ describe MessageStore do
 
     handler.response.should eq "value"
   end
+
+  context "Event" do
+    it "add reply_to metadata" do
+      event = TestEvent.from_json({"name" => "value"}.to_json)
+      event.reply_to = "spec/response"
+
+      event.reply_to.should eq "spec/response"
+      event.metadata["reply_to"].should eq "spec/response"
+    end
+
+    it "add follow metadata" do
+      ms = MessageStore::MessageStore.new
+      event_2 = TestEvent.from_json({"name" => "value"}.to_json)
+      event_1 = ms.write TestEvent.from_json({"name" => "value"}.to_json), "spec/1"
+
+      event_2.follow = event_1
+
+      event_2.follow.should eq event_1.id
+      event_2.metadata["follow"].should eq event_1.id
+    end
+
+    it "add correlation_id metadata" do
+      event = TestEvent.from_json({"name" => "value"}.to_json)
+      event.correlation_id = "123456"
+
+      event.correlation_id.should eq "123456"
+      event.metadata["correlation_id"].should eq "123456"
+    end
+  end
 end

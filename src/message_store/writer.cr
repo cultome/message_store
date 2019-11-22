@@ -4,12 +4,15 @@ module MessageStore::Writer
     metadata = event.metadata.to_json
     event_name = event.class.name
 
-    write_message event_name, payload, metadata, stream, expected_version
-
+    new_id = write_message event_name, payload, metadata, stream, expected_version
     if responds_to? :notify
       notification = Notification.new(event_name, payload, metadata)
       notify(stream, notification)
     end
+
+    new_event = event.clone
+    new_event.metadata["id"] = new_id
+    new_event
   end
 
   private def write_message(event_type : String, payload : String, metadata : String, stream : String, expected_version : Int64?) : String
