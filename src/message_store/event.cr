@@ -17,6 +17,7 @@ abstract class MessageStore::Event
     metadata.fetch("position", "0").to_i64
   end
 
+  # esta muy feo
   def follow=(event : Event)
     @metadata["follow"] = event.id
   end
@@ -25,6 +26,7 @@ abstract class MessageStore::Event
     @metadata["follow"]
   end
 
+  # esta muy feo
   def correlation_id=(value)
     @metadata["correlation_id"] = value
   end
@@ -33,12 +35,13 @@ abstract class MessageStore::Event
     @metadata["correlation_id"]
   end
 
+  # esta muy feo
   def reply_to=(value)
     @metadata["reply_to"] = value
   end
 
   def reply_to
-    @metadata["reply_to"]
+    @metadata.fetch("reply_to", "")
   end
 
   def clone
@@ -46,6 +49,10 @@ abstract class MessageStore::Event
     new_instance.metadata = Hash(String, String).from_json metadata.to_json
 
     new_instance
+  end
+
+  def copy_to(event_class : Event.class)
+    event_class.build self.to_json, metadata.to_json
   end
 
   def self.build(
@@ -65,7 +72,7 @@ abstract class MessageStore::Event
     instance.metadata = Hash(String, String).from_json(metadata_payload.to_json) unless metadata_payload.nil?
 
     instance.metadata = {
-      "type"            => self.name,
+      "type"            => self.name.split("::").last,
       "id"              => id,
       "stream_name"     => stream_name,
       "type"            => type,
@@ -79,7 +86,17 @@ abstract class MessageStore::Event
     instance
   end
 
-  def self.build(data_payload : String, metadata_payload : String) : Event
+  def self.build(data_payload : Hash, metadata_payload : Hash? = nil) : Event
+    event_instance = self.from_json data_payload.to_json
+
+    unless metadata_payload.nil?
+      event_instance.metadata = Hash(String, String).from_json(metadata_payload.to_json)
+    end
+
+    event_instance
+  end
+
+  def self.build(data_payload : String, metadata_payload : String? = nil) : Event
     event_instance = self.from_json data_payload
 
     unless metadata_payload.nil?

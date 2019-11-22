@@ -2,12 +2,18 @@ module MessageStore::Writer
   def write(event : Event, stream : String, expected_version : Int64? = nil)
     payload = event.to_json
     metadata = event.metadata.to_json
-    event_name = event.class.name
+    event_name = event.class.name.split("::").last
 
     new_id = write_message event_name, payload, metadata, stream, expected_version
+    unless event.reply_to.empty?
+      write_message event_name, payload, metadata, event.reply_to
+    end
+
     if responds_to? :notify
       notification = Notification.new(event_name, payload, metadata)
       notify(stream, notification)
+
+      notify(event.reply_to, notification) unless event.reply_to.empty?
     end
 
     new_event = event.clone
@@ -15,7 +21,7 @@ module MessageStore::Writer
     new_event
   end
 
-  private def write_message(event_type : String, payload : String, metadata : String, stream : String, expected_version : Int64?) : String
+  private def write_message(event_type : String, payload : String, metadata : String, stream : String, expected_version : Int64? = nil) : String
     latest_version = stream_version stream
     unless expected_version.nil?
       raise "Invalid expected version! expected: #{expected_version}, actual: #{latest_version}" if expected_version != latest_version

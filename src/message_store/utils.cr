@@ -33,7 +33,7 @@ module MessageStore::Utils
   end
 
   def classname_table(classes : Array(Object.class))
-    classes.each_with_object(Hash(String, Event.class).new) { |clazz, acc| acc[clazz.name] = clazz }
+    classes.each_with_object(Hash(String, Event.class).new) { |clazz, acc| acc[clazz.name.split("::").last] = clazz }
   end
 
   def query_to_stream(db : DB::Database, query : String, stream : String, &block : DB::ResultSet ->)
