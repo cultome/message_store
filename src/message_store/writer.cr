@@ -5,12 +5,11 @@ module MessageStore::Writer
     event_name = event.class.name.split("::").last
 
     new_id = write_message event_name, payload, metadata, stream, expected_version
-    unless event.reply_to.empty?
-      write_message event_name, payload, metadata, event.reply_to
-    end
+
+    write_message event_name, payload, metadata, event.reply_to unless event.reply_to.empty?
 
     if responds_to? :notify
-      notification = Notification.new(event_name, payload, metadata)
+      notification = Notification.new(event_name, new_id)
       notify(stream, notification)
 
       notify(event.reply_to, notification) unless event.reply_to.empty?

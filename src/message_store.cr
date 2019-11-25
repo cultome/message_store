@@ -14,7 +14,7 @@ module MessageStore
   class MessageStore
     include Config
     include Writer
-    include Reader
+    include StreamReader
     include Subscriber
     include Notifier
     include Cacheable
