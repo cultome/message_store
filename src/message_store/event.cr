@@ -6,7 +6,7 @@ abstract class MessageStore::Event
   abstract def to_json
 
   def id
-    @metadata["id"]
+    metadata["id"]
   end
 
   def version
@@ -19,29 +19,41 @@ abstract class MessageStore::Event
 
   # esta muy feo
   def follow=(event : Event)
-    @metadata["follow"] = event.id
+    metadata["follow"] = event.id
   end
 
   def follow
-    @metadata["follow"]
+    metadata["follow"]
+  end
+
+  def follow?
+    !metadata.fetch("follow", nil).nil?
   end
 
   # esta muy feo
   def correlation_id=(value)
-    @metadata["correlation_id"] = value
+    metadata["correlation_id"] = value
   end
 
   def correlation_id
-    @metadata["correlation_id"]
+    metadata["correlation_id"]
+  end
+
+  def correlation_id?
+    !metadata.fetch("correlation_id", nil).nil?
   end
 
   # esta muy feo
   def reply_to=(value)
-    @metadata["reply_to"] = value
+    metadata["reply_to"] = value
   end
 
   def reply_to
-    @metadata.fetch("reply_to", "")
+    metadata["reply_to"]
+  end
+
+  def reply_to?
+    !metadata.fetch("reply_to", nil).nil?
   end
 
   def clone
