@@ -1,12 +1,21 @@
 module MessageStore::Subscriber
   def subscribe(stream : String, handler : Handler, events : Array(Event.class))
-    spawn create_listener(stream, handler, events)
+    create_listener(stream, handler, events){}
   end
 
-  private def create_listener(stream : String, handler : Handler, events : Array(Event.class))
+  def subscribe_and_wait(stream : String, handler : Handler, events : Array(Event.class))
+    close_ch = Channel(Nil).new
+
+    close_fn = create_listener(stream, handler, events){ close_ch.send nil }
+
+    close_ch.receive
+    close_fn.call
+  end
+
+  private def create_listener(stream : String, handler : Handler, events : Array(Event.class), &block)
     mapping = classname_table events
 
-    PG.connect_listen(config.db_url, stream) do |update|
+    conn = PG.connect_listen(config.db_url, stream) do |update|
       meassure "Time to handle message to stream #{stream}" do
         notification = Notification.from_json update.payload
 
@@ -14,8 +23,12 @@ module MessageStore::Subscriber
           event_instance = event_by_id notification.id, mapping[notification.event_name]
 
           handler.handle event_instance
+
+          block.call
         end
       end
     end
+
+    ->(){ conn.close }
   end
 end
