@@ -23,6 +23,17 @@ describe MessageStore do
       current_version = ms.stream_version "spec/1"
       ms.write event, "spec/1", current_version
     end
+
+    it "writes merged metadata" do
+      ms = MessageStore::MessageStore.new
+      event = TestEvent.from_json({"name" => "value"}.to_json).reply_to("reply/to")
+
+      current_version = ms.stream_version "spec/1"
+      new_event = ms.write event, "spec/1", current_version
+
+      new_event = ms.event_by_id new_event.id, TestEvent
+      new_event.reply_to.should eq "reply/to"
+    end
   end
 
   context "#fetch_entity" do
@@ -92,7 +103,7 @@ describe MessageStore do
   context "Event" do
     it "add reply_to metadata" do
       event = TestEvent.from_json({"name" => "value"}.to_json)
-      event.reply_to = "spec/response"
+      event.reply_to "spec/response"
 
       event.reply_to.should eq "spec/response"
       event.metadata["reply_to"].should eq "spec/response"
@@ -103,7 +114,7 @@ describe MessageStore do
       event_2 = TestEvent.from_json({"name" => "value"}.to_json)
       event_1 = ms.write TestEvent.from_json({"name" => "value"}.to_json), "spec/1"
 
-      event_2.follow = event_1
+      event_2.follow event_1
 
       event_2.follow.should eq event_1.id
       event_2.metadata["follow"].should eq event_1.id
@@ -111,7 +122,7 @@ describe MessageStore do
 
     it "add correlation_id metadata" do
       event = TestEvent.from_json({"name" => "value"}.to_json)
-      event.correlation_id = "123456"
+      event.correlation_id "123456"
 
       event.correlation_id.should eq "123456"
       event.metadata["correlation_id"].should eq "123456"

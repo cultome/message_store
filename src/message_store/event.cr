@@ -18,8 +18,9 @@ abstract class MessageStore::Event
   end
 
   # esta muy feo
-  def follow=(event : Event)
+  def follow(event : Event)
     metadata["follow"] = event.id
+    self
   end
 
   def follow
@@ -31,8 +32,9 @@ abstract class MessageStore::Event
   end
 
   # esta muy feo
-  def correlation_id=(value)
+  def correlation_id(value)
     metadata["correlation_id"] = value
+    self
   end
 
   def correlation_id
@@ -44,8 +46,9 @@ abstract class MessageStore::Event
   end
 
   # esta muy feo
-  def reply_to=(value)
+  def reply_to(value)
     metadata["reply_to"] = value
+    self
   end
 
   def reply_to
@@ -81,8 +84,6 @@ abstract class MessageStore::Event
   ) : Event
     instance = self.from_json data_payload.to_json
 
-    instance.metadata = Hash(String, String).from_json(metadata_payload.to_json) unless metadata_payload.nil?
-
     instance.metadata = {
       "type"            => self.name.split("::").last,
       "id"              => id,
@@ -92,8 +93,14 @@ abstract class MessageStore::Event
       "global_position" => global_position.to_s,
       "time"            => time.to_s,
     }
+
     instance.metadata["stream_category"] = stream_category unless stream_category.nil?
     instance.metadata["stream_id"] = stream_id unless stream_id.nil?
+
+    unless metadata_payload.nil?
+      payload_metadata = Hash(String, String).from_json(metadata_payload.to_json)
+      instance.metadata.merge!(payload_metadata)
+    end
 
     instance
   end

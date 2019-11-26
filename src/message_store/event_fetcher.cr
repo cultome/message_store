@@ -1,5 +1,5 @@
 module MessageStore::EventFetcher
-  EVENT_FIELDS = "id, stream_name, stream_category, stream_id, type, position, global_position, data, metadata, time"
+  EVENT_FIELDS      = "id, stream_name, stream_category, stream_id, type, position, global_position, data, metadata, time"
   EVENT_FIELD_TYPES = {String, String, String?, String?, String, Int64, Int64, JSON::Any, JSON::Any, Time}
 
   def event_by_id(event_id : String, event_class : Event.class)
