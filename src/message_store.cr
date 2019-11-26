@@ -1,5 +1,6 @@
 require "db"
 require "json"
+require "logger"
 require "pg"
 require "redis"
 require "uuid"

@@ -4,7 +4,7 @@ module MessageStore::Metrics
     yield
     lapse = Time.utc.millisecond - start
 
-    puts "[*] #{description} took #{lapse}ms"
+    config.logger.debug "#{description} took #{lapse}ms"
 
     lapse
   end

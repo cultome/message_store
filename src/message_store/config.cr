@@ -19,6 +19,32 @@ module MessageStore
     def snapshot_threshold
       ENV.fetch("SNAPSHOT_THRESHOLD", "5").to_i
     end
+
+    def logger
+      @logger ||= Logger.new(STDOUT, level: logger_level)
+    end
+
+    def logger_level
+      level = ENV.fetch("LOGGER_LEVEL", "debug")
+
+      case level
+      when "debug"
+        Logger::DEBUG
+      when "error"
+        Logger::ERROR
+      when "fatal"
+        Logger::FATAL
+      when "info"
+        Logger::INFO
+      when "unknown"
+        Logger::UNKNOWN
+      when "warn"
+        Logger::WARN
+      else
+        puts "Unknown logger level [#{level}]. Setting to INFO"
+        Logger::INFO
+      end
+    end
   end
 
   module Config

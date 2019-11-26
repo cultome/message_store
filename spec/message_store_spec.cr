@@ -94,11 +94,13 @@ describe MessageStore do
       handler = TestHandler.new
       event = TestEvent.from_json({"name" => "value"}.to_json)
 
-      ms.subscribe "spec:subscribe/1", handler, [TestEvent]
+      close_fn = ms.subscribe "spec:subscribe/1", handler, [TestEvent]
       ms.write(event, "spec:subscribe/1")
       sleep 0.1 # wait for message reception
 
       handler.response.should eq "value"
+
+      close_fn.call
     end
 
     it "subscribe and wait" do
@@ -108,7 +110,7 @@ describe MessageStore do
 
       spawn ms.write(event, "spec:subscribe/2")
 
-      ms.subscribe_and_wait "spec:subscribe/2", handler, [TestEvent]
+      ms.subscribe_and_wait_one "spec:subscribe/2", handler, [TestEvent]
 
       handler.response.should eq "value_1"
     end
