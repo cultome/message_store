@@ -24,5 +24,6 @@ module MessageStore
     include Utils
     include RedisStore
     include PostgresStore
+    include Metrics
   end
 end
