@@ -1,27 +1,26 @@
 module MessageStore::Subscriber
   def subscribe(stream : String, handler : Handler, events : Array(Event.class))
-    create_listener(stream, handler, events){ |evt| }
+    create_listener(stream, handler, events) { |evt| }
   end
 
   def subscribe_and_wait_one(stream : String, handler : Handler, events : Array(Event.class))
     close_ch = Channel(Nil).new
 
-    close_fn = create_listener(stream, handler, events){ close_ch.send nil }
+    create_listener(stream, handler, events) { close_ch.send nil }
 
     close_ch.receive
-    close_fn.call
   end
 
   def subscribe_and_wait_forever(stream : String, handler : Handler, events : Array(Event.class))
     close_ch = Channel(Nil).new
 
-    create_listener(stream, handler, events){ |evt| }
+    create_listener(stream, handler, events) { |evt| }
 
     close_ch.receive
   end
 
   def subscribe_and_wait_signal(stream : String, handler : Handler, events : Array(Event.class), signal_ch : Channel)
-    create_listener(stream, handler, events){ |evt| }
+    create_listener(stream, handler, events) { |evt| }
 
     signal_ch.receive
   end
@@ -43,6 +42,6 @@ module MessageStore::Subscriber
       end
     end
 
-    ->(){ conn.close }
+    ->{ conn.close }
   end
 end

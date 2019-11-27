@@ -114,6 +114,23 @@ describe MessageStore do
 
       handler.response.should eq "value_1"
     end
+
+    it "use the built in handler" do
+      ms = MessageStore::MessageStore.new
+      handler = MessageStore::OperationResponse(TestEvent, TestEvent2).new
+      success_evt = TestEvent.from_json({"name" => "value_1"}.to_json)
+      fail_evt = TestEvent2.from_json({"name" => "value_1"}.to_json)
+
+      spawn ms.write(success_evt, "spec:subscribe/2")
+      ms.subscribe_and_wait_one "spec:subscribe/2", handler, [TestEvent]
+      handler.success.should be_true
+      handler.event.should be_a(TestEvent)
+
+      spawn ms.write(fail_evt, "spec:subscribe/2")
+      ms.subscribe_and_wait_one "spec:subscribe/2", handler, [TestEvent2]
+      handler.success.should be_false
+      handler.event.should be_a(TestEvent2)
+    end
   end
 
   context "Event" do

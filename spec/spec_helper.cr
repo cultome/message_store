@@ -7,6 +7,12 @@ class TestEvent < MessageStore::Event
   )
 end
 
+class TestEvent2 < MessageStore::Event
+  JSON.mapping(
+    name: String
+  )
+end
+
 class TestHandler < MessageStore::Handler
   property response
 
