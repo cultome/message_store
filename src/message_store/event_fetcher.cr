@@ -9,6 +9,20 @@ module MessageStore::EventFetcher
     end
   end
 
+  def events_by_type(event_class : Event.class)
+    events = [] of Event
+
+    with_db do |db|
+      db.query("select #{EVENT_FIELDS} from #{config.messages_table} where type = $1", event_class.name) do |rs|
+        rs.each do
+          events.push map_event event_class, rs.read(*EVENT_FIELD_TYPES)
+        end
+      end
+    end
+
+    events
+  end
+
   def events_from_position(position : Int64, stream : String, supported_events : Array(Event.class))
     events = [] of Event
     latest_position : Int64 = 0
