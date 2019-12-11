@@ -5,13 +5,16 @@ require "pg"
 require "redis"
 require "uuid"
 require "./message_store/event"
+require "./message_store/handler"
 require "./message_store/redis_store"
 require "./message_store/config"
+require "./message_store/utils/operation_success_event"
+require "./message_store/utils/operation_failure_event"
+require "./message_store/utils/operation_response_handler"
+require "./message_store/utils/utils"
 require "./message_store/*"
 
 module MessageStore
-  VERSION = "0.1.0"
-
   class MessageStore
     include Config
     include Writer

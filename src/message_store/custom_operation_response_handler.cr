@@ -1,4 +1,4 @@
-class MessageStore::OperationResponse(S, F) < MessageStore::Handler
+class MessageStore::Utils::CustomOperationResponseHandler(S, F) < MessageStore::Handler
   @event : S | F | Nil
   @success : Bool = false
 

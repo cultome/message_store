@@ -1,5 +1,7 @@
 require "./spec_helper"
 
+include MessageStore
+
 describe MessageStore do
   context "#write" do
     it "simple write" do
@@ -115,21 +117,38 @@ describe MessageStore do
       handler.response.should eq "value_1"
     end
 
-    it "use the built in handler" do
+    it "use the built in operation handler" do
       ms = MessageStore::MessageStore.new
-      handler = MessageStore::OperationResponse(TestEvent, TestEvent2).new
-      success_evt = TestEvent.from_json({"name" => "value_1"}.to_json)
-      fail_evt = TestEvent2.from_json({"name" => "value_1"}.to_json)
+      handler = Utils::OperationResponseHandler.new
+      success_evt = Utils::OperationSuccessEvent.from_json({"data" => {"id" => "123456789"}}.to_json)
+      fail_evt = Utils::OperationFailureEvent.from_json({"errors" => ["something went wrong!"]}.to_json)
 
       spawn ms.write(success_evt, "spec:subscribe/2")
-      ms.subscribe_and_wait_one "spec:subscribe/2", handler, [TestEvent]
+      ms.subscribe_and_wait_operation "spec:subscribe/2", handler
       handler.success.should be_true
-      handler.event.should be_a(TestEvent)
+      handler.event.should be_a(Utils::OperationSuccessEvent)
 
       spawn ms.write(fail_evt, "spec:subscribe/2")
-      ms.subscribe_and_wait_one "spec:subscribe/2", handler, [TestEvent2]
+      ms.subscribe_and_wait_operation "spec:subscribe/2", handler
       handler.success.should be_false
-      handler.event.should be_a(TestEvent2)
+      handler.event.should be_a(Utils::OperationFailureEvent)
+    end
+
+    it "use the built in custom operation handler" do
+      ms = MessageStore::MessageStore.new
+      handler = Utils::CustomOperationResponseHandler(Utils::OperationSuccessEvent, Utils::OperationFailureEvent).new
+      success_evt = Utils::OperationSuccessEvent.from_json({"data" => {"id" => "123456789"}}.to_json)
+      fail_evt = Utils::OperationFailureEvent.from_json({"errors" => ["something went wrong!"]}.to_json)
+
+      spawn ms.write(success_evt, "spec:subscribe/2")
+      ms.subscribe_and_wait_one "spec:subscribe/2", handler, [Utils::OperationSuccessEvent]
+      handler.success.should be_true
+      handler.event.should be_a(Utils::OperationSuccessEvent)
+
+      spawn ms.write(fail_evt, "spec:subscribe/2")
+      ms.subscribe_and_wait_one "spec:subscribe/2", handler, [Utils::OperationFailureEvent]
+      handler.success.should be_false
+      handler.event.should be_a(Utils::OperationFailureEvent)
     end
   end
 
