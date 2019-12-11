@@ -1,7 +1,5 @@
 # message_store
 
-TODO: Write a description here
-
 ## Installation
 
 1. Add the dependency to your `shard.yml`:
@@ -46,9 +44,11 @@ CREATE TABLE IF NOT EXISTS "messages" (
 )
 ```
 
-## Development
+## TODO
 
-TODO: Write development instructions here
+ * Initialize database easily
+
+## Development
 
 ## Contributing
 
