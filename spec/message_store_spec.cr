@@ -125,12 +125,20 @@ describe MessageStore do
       spawn ms.write(success_evt, "spec:subscribe/2")
       response = ms.subscribe_and_wait_operation "spec:subscribe/2"
       response.success.should be_true
-      response.event.should be_a(Utils::OperationSuccessEvent)
+      response.event.as(Utils::OperationSuccessEvent).data["id"].should eq "123456789"
 
       spawn ms.write(fail_evt, "spec:subscribe/2")
       response = ms.subscribe_and_wait_operation "spec:subscribe/2"
       response.success.should be_false
-      response.event.should be_a(Utils::OperationFailureEvent)
+      response.event.as(Utils::OperationFailureEvent).errors.first.should eq "something went wrong!"
+    end
+
+    it "abort wait one timeout" do
+      ms = MessageStore::MessageStore.new
+
+      response = ms.subscribe_and_wait_operation "spec:subscribe/3", timeout_sec: 1
+      response.success.should be_false
+      response.event.as(Utils::OperationFailureEvent).errors.first == "operation timeout after 5 seconds"
     end
 
     it "use the built in custom operation handler" do
@@ -149,6 +157,7 @@ describe MessageStore do
       handler.success.should be_false
       handler.event.should be_a(Utils::OperationFailureEvent)
     end
+
   end
 
   context "Event" do

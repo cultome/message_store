@@ -11,11 +11,19 @@ module MessageStore::Subscriber
     close_ch.receive
   end
 
-  def subscribe_and_wait_operation(stream : String)
+  def subscribe_and_wait_operation(stream : String, timeout_sec : Int = 5)
     close_ch = Channel(Nil).new
     handler = Utils::OperationResponseHandler.new
 
     create_listener(stream, handler, [::MessageStore::Utils::OperationSuccessEvent, ::MessageStore::Utils::OperationFailureEvent]) { close_ch.send nil }
+
+    spawn do
+      sleep timeout_sec
+
+      handler.event = ::MessageStore::Utils::OperationFailureEvent.new ["operation timeout after #{timeout_sec} seconds"]
+
+      close_ch.send nil
+    end
 
     close_ch.receive
 
