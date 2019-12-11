@@ -11,12 +11,15 @@ module MessageStore::Subscriber
     close_ch.receive
   end
 
-  def subscribe_and_wait_operation(stream : String, handler : Handler)
+  def subscribe_and_wait_operation(stream : String)
     close_ch = Channel(Nil).new
+    handler = Utils::OperationResponseHandler.new
 
     create_listener(stream, handler, [::MessageStore::Utils::OperationSuccessEvent, ::MessageStore::Utils::OperationFailureEvent]) { close_ch.send nil }
 
     close_ch.receive
+
+    handler
   end
 
   def subscribe_and_wait_forever(stream : String, handler : Handler, events : Array(Event.class))
